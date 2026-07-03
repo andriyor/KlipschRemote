@@ -8,17 +8,20 @@
  * loading the page assets without a round-trip.
  *
  * Strategy:
- *   - same-origin shell assets  -> cache-first (instant, offline)
- *   - navigations               -> network-first, fall back to cached index.html
- *   - Google Fonts (CSS + woff) -> cache-first into a runtime cache
+ *   - app shell (navigation + same-origin CSS/JS/icons) -> NETWORK-first, so the
+ *     HTML and the code it loads always come from the same source and can never
+ *     skew. (Fresh HTML paired with a stale cached stylesheet was the "squished
+ *     first load after a deploy" bug.) Each fetch refreshes the cache; offline we
+ *     fall back to it (to index.html for navigations) so the app still launches.
+ *   - Google Fonts (CSS + woff)                         -> cache-first (runtime)
  *
  * IMPORTANT: bump VERSION whenever any shelled file (index.html, app.js,
  * klipsch.js, styles.css, an icon, or this list) changes — the old cache is
- * keyed by it and is dropped on activate, forcing clients onto the new assets.
+ * keyed by it and is dropped on activate.
  */
 "use strict";
 
-const VERSION = "v8";
+const VERSION = "v16";
 const SHELL_CACHE = `klipsch-shell-${VERSION}`;
 const RUNTIME_CACHE = `klipsch-runtime-${VERSION}`;
 
@@ -68,26 +71,42 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
 
-  // Navigations: prefer a fresh page when online (so a new deploy is picked up),
-  // but fall back to the cached shell so the app still launches offline.
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request).catch(() => caches.match("./index.html"))
-    );
-    return;
-  }
-
-  // Google Fonts — cache-first into the runtime cache (opaque responses are fine).
+  // Google Fonts — cache-first into the runtime cache (big, immutable, opaque OK).
   if (FONT_ORIGINS.includes(url.origin)) {
     event.respondWith(cacheFirst(request, RUNTIME_CACHE));
     return;
   }
 
-  // Same-origin shell assets — cache-first.
+  // App shell (the page itself + its same-origin CSS/JS/icons) — network-first,
+  // so a deploy is picked up immediately AND the HTML never pairs with a stale
+  // cached stylesheet/script (that skew was the "squished first load" bug). Each
+  // fetch refreshes the cache; offline we fall back to it (to index.html for
+  // navigations) so the app still launches with no network.
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirst(request, SHELL_CACHE, "./index.html"));
+    return;
+  }
   if (url.origin === self.location.origin) {
-    event.respondWith(cacheFirst(request, SHELL_CACHE));
+    event.respondWith(networkFirst(request, SHELL_CACHE));
   }
 });
+
+async function networkFirst(request, cacheName, fallbackUrl) {
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(cacheName);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cached =
+      (await caches.match(request)) ||
+      (fallbackUrl ? await caches.match(fallbackUrl) : undefined);
+    if (cached) return cached;
+    throw err;
+  }
+}
 
 async function cacheFirst(request, cacheName) {
   const cached = await caches.match(request);

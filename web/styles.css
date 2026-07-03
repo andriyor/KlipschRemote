@@ -4,6 +4,7 @@
  * palette (blue #8AB4F8 accent on near-black surfaces), lifted from theme.py.
  */
 :root {
+  color-scheme: dark;          /* dark native UI everywhere: scrollbars, <select> popup, etc. */
   --primary: #8ab4f8;
   --on-primary: #202124;
   --bg: #161618;               /* window background (surface_container_lowest) */
@@ -175,6 +176,42 @@ h1, h2, h3 { margin: 0; font-weight: 700; }
 .link-btn { background: none; border: 0; padding: 0; font-family: inherit; font-weight: inherit; line-height: inherit; cursor: pointer; }
 .connect-actions { margin-top: auto; display: flex; flex-direction: column; gap: 12px; padding-top: 16px; }
 .status-line { text-align: left; }
+
+/* About / FAQ popup — reuses .backdrop/.dialog, but with a fixed header and its
+   own scrolling body so the long copy never overflows the viewport. The content
+   is always in the DOM (just hidden), so it stays indexable. */
+/* `.dialog.info-dialog` (specificity 0,2,0) so these beat the base `.dialog`
+   rule, which is defined LATER in the file and would otherwise win max-width /
+   padding / gap at equal specificity — that override was silently forcing 420px
+   width + 22px padding + a 12px head/body gap (the "narrow + huge top" bug). */
+.dialog.info-dialog { max-width: 640px; max-height: 82vh; padding: 0; gap: 0; overflow: hidden; }
+/* Uniform 24px horizontal inset on the header and body so the title and copy
+   share one left edge; 16px above and below the divider keeps it balanced. */
+.info-dialog-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px 16px 16px 24px;
+  border-bottom: 1px solid var(--outline-variant);
+}
+.info-dialog-head h2 { flex: 1; font-size: 18px; line-height: 1.3; }
+.info-dialog-head .iconbtn { margin: -8px -8px -8px 0; }   /* pull ✕ to the corner without shrinking its hit area */
+.info-dialog-body {
+  overflow-y: auto; padding: 20px 24px 24px;
+  /* slim dark scrollbar to match the UI (not the light native one) */
+  scrollbar-width: thin; scrollbar-color: var(--outline-variant) transparent;
+}
+.info-dialog-body::-webkit-scrollbar { width: 8px; }
+.info-dialog-body::-webkit-scrollbar-track { background: transparent; }
+.info-dialog-body::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 8px; }
+.info-dialog-body::-webkit-scrollbar-thumb:hover { background: var(--outline); }
+.info-dialog-body h3 { font-size: 14px; margin: 20px 0 8px; }
+.info-dialog-body p { margin: 0 0 12px; color: var(--muted); line-height: 1.6; }
+.info-dialog-body > *:first-child { margin-top: 0; }
+.info-dialog-body b { color: var(--text); font-weight: 500; }
+.info-list { margin: 0 0 12px; padding-left: 20px; color: var(--muted); line-height: 1.6; }
+.info-list li { margin-bottom: 4px; }
+.faq h4 { font-size: 14px; font-weight: 700; color: var(--text); margin: 16px 0 4px; }
+.faq p { margin: 0 0 6px; }
+.info-foot { font-size: 12px; line-height: 1.5; margin-top: 20px; }
 
 /* Connecting screen --------------------------------------------------------- */
 .center-screen {

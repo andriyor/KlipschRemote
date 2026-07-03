@@ -7,7 +7,8 @@
   <title>Klipsch Remote — Bluetooth speaker control in your browser</title>
   <meta name="description" content="Control Klipsch powered speakers (The Fives, Sevens, Nines) over Bluetooth LE — straight from your browser, no install. Volume, input, 3-band EQ, sound modes, subwoofer and more." />
   <link rel="canonical" href="https://klipsch.io/" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="keywords" content="Klipsch Remote, Klipsch The Fives, The Sevens, The Nines, Bluetooth speaker control, Web Bluetooth, powered speaker app, EQ, subwoofer" />
 
   <!-- Icons + PWA -->
   <link rel="icon" href="icon.png" />
@@ -20,22 +21,93 @@
   <meta property="og:title" content="Klipsch Remote" />
   <meta property="og:description" content="Control Klipsch powered speakers (The Fives, Sevens, Nines) over Bluetooth LE — straight from your browser, no install." />
   <meta property="og:url" content="https://klipsch.io/" />
-  <meta property="og:image" content="https://klipsch.io/icon.png" />
-  <meta property="og:image:width" content="1024" />
-  <meta property="og:image:height" content="1024" />
-  <meta property="og:image:alt" content="Klipsch Remote" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:image" content="https://klipsch.io/og.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Klipsch Remote — browser Bluetooth control for The Fives, Sevens and Nines" />
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Klipsch Remote" />
   <meta name="twitter:description" content="Control Klipsch powered speakers (The Fives, Sevens, Nines) over Bluetooth LE — from your browser, no install." />
-  <meta name="twitter:image" content="https://klipsch.io/icon.png" />
+  <meta name="twitter:image" content="https://klipsch.io/og.png" />
+  <meta name="twitter:image:alt" content="Klipsch Remote — browser Bluetooth control for The Fives, Sevens and Nines" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- Material Symbols (icons) + Roboto, to match the desktop Material 3 look. -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap" />
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- Structured data: helps Google classify this as a free web app and
+       (optionally) surface the FAQ. Keep the FAQ answers in sync with the
+       copy in the #about-backdrop popup below — Google requires them to match. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Klipsch Remote",
+    "url": "https://klipsch.io/",
+    "description": "Control Klipsch powered speakers (The Fives, Sevens, Nines) over Bluetooth LE — straight from your browser, no install. Volume, input, 3-band EQ, sound modes, subwoofer and more.",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Windows, macOS, Linux, Android",
+    "browserRequirements": "Requires Chrome, Edge or Opera with Web Bluetooth. Not supported in Firefox or Safari/iOS.",
+    "inLanguage": "en",
+    "image": "https://klipsch.io/og.png",
+    "screenshot": "https://klipsch.io/og.png",
+    "isAccessibleForFree": true,
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "Volume and mute control",
+      "Input switching (TV, Bluetooth, Optical, USB, Analog, Phono)",
+      "3-band equalizer with presets",
+      "Dynamic Bass and Night Mode",
+      "Subwoofer level and phase control",
+      "Speaker placement compensation",
+      "Playback transport controls",
+      "Auto-standby, rename and factory reset",
+      "Installable PWA with offline support"
+    ],
+    "author": { "@type": "Person", "name": "Nixer1337", "url": "https://github.com/Nixer1337" },
+    "sameAs": ["https://github.com/Nixer1337/KlipschRemote"]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Is Klipsch Remote free?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes — it's completely free and open source under the Apache 2.0 license, with no account or sign-in." }
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need to install an app?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. It's a web page that works straight from the browser. You can optionally install it as a PWA for one-tap launching and offline loading." }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it work on iPhone or Safari?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. iOS and Safari don't implement Web Bluetooth. Use Chrome, Edge or Opera on a desktop or an Android phone." }
+      },
+      {
+        "@type": "Question",
+        "name": "Which speakers are supported?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The Klipsch The Fives, The Sevens and The Nines powered speakers." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is my data sent anywhere?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. The remote talks to the speaker locally over Bluetooth; there is no server and no tracking." }
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
   <div id="unsupported" class="banner banner-error" hidden>
@@ -53,17 +125,19 @@
           <span class="mi brand-icon fill">speaker</span>
           <h1 class="brand-title">Klipsch Remote</h1>
         </div>
-        <p class="muted subtitle">Connect to a powered speaker (The Fives / Sevens / Nines).</p>
+        <p class="muted subtitle">Control your Klipsch The Fives, The Sevens or The Nines over Bluetooth — volume, input, EQ and subwoofer, right in your browser. No app to install.</p>
         <hr class="divider" />
         <div class="note muted">
-          Pair the speaker with your system as a Bluetooth <b>audio</b> device
-          first. Then press <b>Connect</b> and choose it from the browser's
+          Press <b>Connect</b> and choose your speaker from the browser's
           device chooser.
         </div>
         <div class="connect-links">
           <a class="repo-link" href="https://github.com/Nixer1337/KlipschRemote" target="_blank" rel="noopener">
             <span class="mi">code</span>Open source on GitHub
           </a>
+          <button id="about-btn" class="repo-link link-btn" type="button">
+            <span class="mi">info</span>About &amp; FAQ
+          </button>
           <!-- Shown only when the browser offers PWA install (beforeinstallprompt). -->
           <button id="install-btn" class="repo-link link-btn" hidden>
             <span class="mi">download</span>Install PWA app
@@ -318,6 +392,73 @@
     </div>
   </div>
 
+  <!-- About / FAQ popup, opened by #about-btn on the Connect screen. The content
+       lives in the DOM (only hidden), so it stays fully indexable — the button
+       just toggles visibility; nothing is loaded on click. -->
+  <div id="about-backdrop" class="backdrop" hidden>
+    <div class="dialog info-dialog" role="dialog" aria-modal="true" aria-labelledby="about-dialog-title">
+      <div class="info-dialog-head">
+        <h2 id="about-dialog-title">About Klipsch Remote</h2>
+        <button class="iconbtn" id="about-dialog-close" title="Close" aria-label="Close"><span class="mi">close</span></button>
+      </div>
+      <div class="info-dialog-body">
+        <p>
+          <b>Klipsch Remote</b> is a free, open-source web app that controls
+          Klipsch powered speakers over Bluetooth Low Energy — no app store, no
+          install, no account. It runs entirely in your browser and talks to the
+          speaker directly, so nothing about your audio ever leaves your device.
+        </p>
+
+        <h3>Supported speakers</h3>
+        <ul class="info-list">
+          <li><b>Klipsch The Fives</b></li>
+          <li><b>Klipsch The Sevens</b></li>
+          <li><b>Klipsch The Nines</b></li>
+        </ul>
+
+        <h3>What you can control</h3>
+        <ul class="info-list">
+          <li>Volume, mute and input switching — TV, Bluetooth, Optical, USB, Analog and Phono</li>
+          <li>3-band equalizer with presets, plus Dynamic Bass and Night Mode</li>
+          <li>Subwoofer level and phase, and corner / wall / open placement compensation</li>
+          <li>Playback transport, auto-standby, rename and factory reset</li>
+          <li>Firmware version and device details</li>
+        </ul>
+
+        <h3>Requirements</h3>
+        <p>
+          Works in <b>Chrome, Edge or Opera</b> on desktop or Android, served
+          over HTTPS. Firefox and Safari/iOS don't support Web Bluetooth. Press
+          <b>Connect</b> and pick your speaker from the browser's device chooser.
+        </p>
+
+        <h3>Frequently asked questions</h3>
+        <div class="faq">
+          <h4>Is Klipsch Remote free?</h4>
+          <p>Yes — it's completely free and open source under the Apache 2.0 license, with no account or sign-in.</p>
+
+          <h4>Do I need to install an app?</h4>
+          <p>No. It's a web page that works straight from the browser. You can optionally install it as a PWA for one-tap launching and offline loading.</p>
+
+          <h4>Does it work on iPhone or Safari?</h4>
+          <p>No. iOS and Safari don't implement Web Bluetooth. Use Chrome, Edge or Opera on a desktop or an Android phone.</p>
+
+          <h4>Which speakers are supported?</h4>
+          <p>The Klipsch The Fives, The Sevens and The Nines powered speakers.</p>
+
+          <h4>Is my data sent anywhere?</h4>
+          <p>No. The remote talks to the speaker locally over Bluetooth; there is no server and no tracking.</p>
+        </div>
+
+        <p class="info-foot muted">
+          An independent, community-built project — not affiliated with, authorized
+          or endorsed by Klipsch Group, Inc. “Klipsch”, “The Fives”, “The Sevens”
+          and “The Nines” are trademarks of their respective owners.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <script src="klipsch.js"></script>
   <script src="app.js"></script>
 
@@ -351,6 +492,25 @@
       window.addEventListener("appinstalled", () => {
         deferred = null;
         if (btn) btn.hidden = true;
+      });
+    })();
+
+    // About / FAQ popup: just reveal the in-DOM content on click (no lazy load,
+    // so it stays indexable). Close on the ✕, a backdrop click, or Escape.
+    (function () {
+      const backdrop = document.getElementById("about-backdrop");
+      const openBtn = document.getElementById("about-btn");
+      const closeBtn = document.getElementById("about-dialog-close");
+      if (!backdrop || !openBtn) return;
+      const setOpen = (on) => {
+        backdrop.hidden = !on;
+        if (on && closeBtn) closeBtn.focus();
+      };
+      openBtn.addEventListener("click", () => setOpen(true));
+      if (closeBtn) closeBtn.addEventListener("click", () => setOpen(false));
+      backdrop.addEventListener("click", (e) => { if (e.target === backdrop) setOpen(false); });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !backdrop.hidden) setOpen(false);
       });
     })();
   </script>
