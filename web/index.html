@@ -97,6 +97,11 @@
       },
       {
         "@type": "Question",
+        "name": "Does it work on Linux?",
+        "acceptedAnswer": { "@type": "Answer", "text": "The browser version often can't connect on Linux. Chrome on Linux reaches Bluetooth through BlueZ, which can't open the speaker's control channel, so reads and writes fail even though the device appears in the chooser. Windows, macOS and Android work in the browser; on Linux, use the desktop app from the GitHub project instead." }
+      },
+      {
+        "@type": "Question",
         "name": "Which speakers are supported?",
         "acceptedAnswer": { "@type": "Answer", "text": "The Klipsch The Fives, The Sevens and The Nines powered speakers." }
       },
@@ -130,6 +135,15 @@
         <div class="note muted">
           Press <b>Connect</b> and choose your speaker from the browser's
           device chooser.
+        </div>
+        <!-- Shown only on Linux desktop (see the inline script below): Chrome on
+             Linux reaches Bluetooth through BlueZ, which can't open the speaker's
+             BR/EDR control channel, so the browser path often can't connect. -->
+        <div id="linux-note" class="banner banner-error inline" hidden style="margin-top: 12px;">
+          <b>On Linux?</b> Your speaker may not respond in the browser — Chrome
+          on Linux (via BlueZ) can't reach its Bluetooth control channel. Use the
+          <a href="https://github.com/Nixer1337/KlipschRemote" target="_blank" rel="noopener">desktop app</a>
+          instead.
         </div>
         <div class="connect-links">
           <a class="repo-link" href="https://github.com/Nixer1337/KlipschRemote" target="_blank" rel="noopener">
@@ -443,6 +457,9 @@
           <h4>Does it work on iPhone or Safari?</h4>
           <p>No. iOS and Safari don't implement Web Bluetooth. Use Chrome, Edge or Opera on a desktop or an Android phone.</p>
 
+          <h4>Does it work on Linux?</h4>
+          <p>The browser version often can't connect on Linux. Chrome on Linux reaches Bluetooth through BlueZ, which can't open the speaker's control channel, so reads and writes fail even though the device appears in the chooser. Windows, macOS and Android work in the browser; on Linux, use the desktop app from the GitHub project instead.</p>
+
           <h4>Which speakers are supported?</h4>
           <p>The Klipsch The Fives, The Sevens and The Nines powered speakers.</p>
 
@@ -493,6 +510,26 @@
         deferred = null;
         if (btn) btn.hidden = true;
       });
+    })();
+
+    // Linux hint: reveal the Connect-screen warning only on Linux *desktop*.
+    // Chrome there rides on BlueZ, which can't open the speaker's BR/EDR control
+    // channel, so the browser path usually can't connect (unlike the native app).
+    // Android is Linux-kernel-based but works, and ChromeOS works too — exclude
+    // both. Prefer the high-entropy userAgentData.platform ("Linux" is desktop
+    // Linux only; Android reports "Android"), falling back to a UA string sniff.
+    (function () {
+      const note = document.getElementById("linux-note");
+      if (!note) return;
+      const uaPlatform = navigator.userAgentData && navigator.userAgentData.platform;
+      let isLinuxDesktop;
+      if (uaPlatform) {
+        isLinuxDesktop = uaPlatform === "Linux";
+      } else {
+        const ua = navigator.userAgent || "";
+        isLinuxDesktop = /Linux/.test(ua) && !/Android|CrOS/.test(ua);
+      }
+      if (isLinuxDesktop) note.hidden = false;
     })();
 
     // About / FAQ popup: just reveal the in-DOM content on click (no lazy load,

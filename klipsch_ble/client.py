@@ -567,12 +567,17 @@ def _bleak_factory(target: object, timeout: float) -> BleakLike:
 
 
 def _default_factory() -> ClientFactory:
-    """Pick the fastest factory for the current OS.
+    """Pick the right backend for the current OS.
 
     On Windows, bleak's ``connect()`` does a full GATT discovery (~6-10 s on The
     Fives). The WinRT backend fetches only what's needed (cached), so a cold
-    connect drops to ~1.7 s and a warm one to near-instant. Everywhere else,
-    plain bleak is the single cross-platform path.
+    connect drops to ~1.7 s and a warm one to near-instant.
+
+    On Linux, bleak talks GATT over *LE*, but the speaker serves its control ATT
+    over the Classic (BR/EDR) transport, so LE never answers. The L2CAP backend
+    speaks ATT directly over BR/EDR and is the only path that works there (see
+    ``l2cap_backend``). macOS keeps plain bleak (CoreBluetooth bonds LE like a
+    phone, so the LE path works).
     """
     import sys
 
@@ -582,6 +587,13 @@ def _default_factory() -> ClientFactory:
 
             return winrt_factory
         except Exception:  # pragma: no cover - missing winrt projection
+            return _bleak_factory
+    if sys.platform.startswith("linux"):
+        try:
+            from .l2cap_backend import l2cap_factory
+
+            return l2cap_factory
+        except Exception:  # pragma: no cover - no Linux BT socket support
             return _bleak_factory
     return _bleak_factory
 

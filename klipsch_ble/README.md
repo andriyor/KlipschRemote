@@ -55,6 +55,28 @@ Three Plus, and the Cinema soundbars.
   pairing is what makes GATT reachable. **Never** pair/unpair it as an LE-only
   device — that breaks control.
 
+## Backends per OS
+
+One `BleakLike` seam, three transports, picked automatically:
+
+| OS | Backend | Transport |
+|---|---|---|
+| Windows | WinRT fast-path (falls back to bleak) | GATT over LE |
+| macOS | bleak / CoreBluetooth | GATT over LE |
+| Linux | `l2cap_backend` (raw ATT socket) | **GATT over BR/EDR** (ATT PSM `0x1F`) |
+
+Why Linux is different: the speaker serves its control ATT over the *Classic*
+(BR/EDR) transport, and BlueZ can't hold a working LE GATT bond for it (the
+Classic→LE CTKD key isn't persisted), so bleak's LE path never answers. The
+Linux backend opens a raw `AF_BLUETOOTH` L2CAP socket to the ATT PSM and speaks
+ATT directly — no root, just a live audio (Classic) link. All reads/writes work
+identically.
+
+One Linux limitation: the firmware only *pushes* value notifications over LE, so
+`subscribe()` (the live volume-knob / mute mirror) never fires over BR/EDR. Every
+other feature works; nothing in the backend is disabled, it just receives no
+notifications on this transport.
+
 ## Use it
 
 No packaging yet. Put the `klipsch_ble/` folder on your import path — e.g. run
