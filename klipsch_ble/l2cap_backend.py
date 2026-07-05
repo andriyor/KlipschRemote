@@ -118,8 +118,11 @@ class L2capAttClient:
         self._mtu = 23
 
         # one outstanding ATT request at a time (ATT is a serial request/response
-        # protocol); the reader thread completes it.
-        self._lock = asyncio.Lock()
+        # protocol); the reader thread completes it. Created lazily in connect()
+        # under the running loop — on Python 3.9 ``asyncio.Lock()`` binds to the
+        # current event loop at construction, which raises if built outside one
+        # (e.g. from the plain ``l2cap_factory`` before any loop is running).
+        self._lock: asyncio.Lock | None = None
         self._pending: asyncio.Future | None = None
 
         # discovery results, keyed by canonical UUID
@@ -134,6 +137,7 @@ class L2capAttClient:
         if not hasattr(socket, "AF_BLUETOOTH") or not hasattr(socket, "BTPROTO_L2CAP"):
             raise AttError("this Python build has no Linux Bluetooth L2CAP support")
         self._loop = asyncio.get_running_loop()
+        self._lock = asyncio.Lock()  # bind to this running loop (see __init__)
         sock = self._socket_factory(
             socket.AF_BLUETOOTH, socket.SOCK_SEQPACKET, socket.BTPROTO_L2CAP
         )
@@ -321,10 +325,11 @@ class L2capAttClient:
         sock.send(pdu)
 
     async def _request(self, pdu: bytes) -> bytes:
+        if self._sock is None or self._loop is None or self._lock is None:
+            raise AttError("ATT socket is not connected")
+        loop = self._loop
         async with self._lock:
-            if self._sock is None or self._loop is None:
-                raise AttError("ATT socket is not connected")
-            fut: asyncio.Future = self._loop.create_future()
+            fut: asyncio.Future = loop.create_future()
             self._pending = fut
             try:
                 self._send(pdu)
