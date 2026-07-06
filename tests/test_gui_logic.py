@@ -12,9 +12,54 @@ import pytest
 
 pytest.importorskip("flet")
 
-from klipsch_remote.app import KlipschRemote
+import os
+import sys
+
+from klipsch_remote.app import KlipschRemote, _prefer_xwayland_backend
 from klipsch_remote.theme import CUSTOM, EQ_PRESETS
 from klipsch_remote.widgets import VSlider
+
+
+class TestPreferXWaylandBackend:
+    """The flet GTK client aborts under the Wayland backend on a host whose
+    xsettings GSettings schema lacks ``antialiasing``; we reroute it to XWayland
+    — but only when XWayland (``DISPLAY``) is actually available."""
+
+    def _env(self, monkeypatch, *, platform, wayland, display, gdk=None):
+        monkeypatch.setattr(sys, "platform", platform)
+        for name, val in (("WAYLAND_DISPLAY", wayland), ("DISPLAY", display),
+                          ("GDK_BACKEND", gdk)):
+            if val is None:
+                monkeypatch.delenv(name, raising=False)
+            else:
+                monkeypatch.setenv(name, val)
+
+    def test_wayland_with_xwayland_forces_x11(self, monkeypatch):
+        self._env(monkeypatch, platform="linux", wayland="wayland-0", display=":0")
+        _prefer_xwayland_backend()
+        assert os.environ["GDK_BACKEND"] == "x11"
+
+    def test_respects_explicit_override(self, monkeypatch):
+        self._env(monkeypatch, platform="linux", wayland="wayland-0",
+                  display=":0", gdk="wayland")
+        _prefer_xwayland_backend()
+        assert os.environ["GDK_BACKEND"] == "wayland"   # setdefault left it alone
+
+    def test_pure_x11_session_untouched(self, monkeypatch):
+        self._env(monkeypatch, platform="linux", wayland=None, display=":0")
+        _prefer_xwayland_backend()
+        assert "GDK_BACKEND" not in os.environ
+
+    def test_wayland_without_xwayland_untouched(self, monkeypatch):
+        # No DISPLAY => no XWayland to fall back to; don't strand the client.
+        self._env(monkeypatch, platform="linux", wayland="wayland-0", display=None)
+        _prefer_xwayland_backend()
+        assert "GDK_BACKEND" not in os.environ
+
+    def test_non_linux_untouched(self, monkeypatch):
+        self._env(monkeypatch, platform="win32", wayland="wayland-0", display=":0")
+        _prefer_xwayland_backend()
+        assert "GDK_BACKEND" not in os.environ
 
 
 def _slider(lo: int = -10, hi: int = 6) -> VSlider:

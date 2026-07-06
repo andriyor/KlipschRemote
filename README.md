@@ -87,12 +87,18 @@ self-hosting: [`web/`](web/README.md).
 [**latest release**](https://github.com/Nixer1337/KlipschRemote/releases/latest)
 (`KlipschRemote-Setup.exe`), run it, done. Per-user install, no admin needed.
 
-**Linux app** — grab `KlipschRemote-x86_64.AppImage` from the
-[**latest release**](https://github.com/Nixer1337/KlipschRemote/releases/latest),
-`chmod +x` it and run — a single portable file, no install, works on essentially
-any modern x86-64 distro (pair the speaker as a Bluetooth audio device first). It
-ships the static AppImage runtime, so no host `libfuse2` is required; if mounting
-ever fails on an unusual setup, run it with `--appimage-extract-and-run`.
+**Linux app** — grab the `.deb` (`klipsch-remote_<ver>_amd64.deb`) from the
+[**latest release**](https://github.com/Nixer1337/KlipschRemote/releases/latest)
+and install it — it registers **Klipsch Remote** in your applications menu, with
+its own icon:
+
+```sh
+sudo apt install ./klipsch-remote_*_amd64.deb   # then launch it from the app menu
+sudo apt remove klipsch-remote                   # to uninstall
+```
+
+Debian/Ubuntu-family, x86-64. Pair the speaker as a Bluetooth **audio** device
+first. (`apt` pulls in `bluez` + the GTK runtime if they're missing.)
 
 **From source** (any OS):
 
@@ -151,15 +157,22 @@ so builds are reproducible.
 | Target | Command | Output |
 |---|---|---|
 | Windows | `build_app.bat` (add `-NoInstaller` for the folder bundle only) | `dist_installer\KlipschRemote-Setup.exe` + `dist_app\` |
-| Linux | `./build_app.sh` *(on Linux)* | `dist_installer/KlipschRemote-x86_64.AppImage` + `dist_app/KlipschRemote/` |
+| Linux | `./build_app_linux.sh` *(on Linux)* | `dist_installer/klipsch-remote_<ver>_amd64.deb` + `dist_app/KlipschRemote/` |
 
 On Windows the build also compiles the Inno Setup installer by default (needs
 `winget install JRSoftware.InnoSetup`); `-NoInstaller` stops at the `dist_app\`
-folder bundle. `flet build linux` can't cross-compile, so build the AppImage on
-Linux. From Windows, run `build_app_linux.bat` to do it in a Docker container
-instead. CI
+folder bundle.
+
+The Linux build differs: `flet build linux` bundles a CPython without
+`socket.AF_BLUETOOTH`, so the L2CAP control path can't work — the app would throw
+*"this Python build has no Linux Bluetooth L2CAP support"*. Instead
+[`build_app_linux.sh`](build_app_linux.sh) freezes the app with **PyInstaller**
+using the distro's CPython (which keeps `AF_BLUETOOTH`) and packages a `.deb`; it
+hard-fails if the interpreter ever lacks Bluetooth support, so a broken build
+can't ship. Prereqs: `python3`, `python3-venv`, `python3-dev`, `dpkg` (all on
+Debian/Ubuntu), plus `pip install -r requirements.txt pyinstaller`. CI
 ([`build-linux.yml`](.github/workflows/build-linux.yml)) builds it on Ubuntu
-22.04 and attaches the AppImage to the release on every `v*` tag.
+22.04 and attaches the `.deb` to the release on every `v*` tag.
 
 ## 📦 What's inside
 

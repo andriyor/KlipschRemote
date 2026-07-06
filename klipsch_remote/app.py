@@ -1155,11 +1155,45 @@ async def main(page: ft.Page) -> None:
         page.run_task(remote._auto_connect, saved)
 
 
+def _prefer_xwayland_backend() -> None:
+    """On a Linux Wayland session, force the flet desktop client onto XWayland.
+
+    The flet desktop client is a GTK app. Under the GTK **Wayland** backend it
+    reads the host's XSETTINGS through the ``org.gnome.settings-daemon.plugins
+    .xsettings`` GSettings schema, and on a host whose schema lacks the
+    ``antialiasing`` key (a GNOME version skew) that lookup is a *fatal*
+    ``GLib-GIO-ERROR`` — the client aborts before it connects back, so ``ft.run``
+    below hangs forever on a window that never appears (seen when launched from
+    the app menu, i.e. under gnome-shell's Wayland scope). The GTK **X11**
+    backend takes XSETTINGS over the X protocol instead and never touches that
+    schema, so pointing the client at XWayland sidesteps the crash. XWayland is
+    present in effectively every Wayland desktop session; ``setdefault`` leaves
+    an explicit user override (``GDK_BACKEND=...``) untouched, and this is a
+    no-op on a native X11 session (``x11`` is already the backend there).
+
+    Set here — before ``ft.run`` spawns the client — so it covers every launch
+    path (installed .deb menu entry, direct binary, ``python -m klipsch_remote``).
+
+    Only redirect when XWayland is actually reachable (``DISPLAY`` set); on a rare
+    Wayland session with no XWayland, forcing ``x11`` would leave the client with
+    no display at all, so we leave it on Wayland (its only option) there.
+    """
+    if (
+        sys.platform.startswith("linux")
+        and os.environ.get("WAYLAND_DISPLAY")
+        and os.environ.get("DISPLAY")
+    ):
+        os.environ.setdefault("GDK_BACKEND", "x11")
+
+
 def run() -> None:
     # Single instance (cross-platform): if we can't grab the lock, ask the
     # already-running copy to come forward and quit. If the port is held by some
     # foreign app (handshake fails), fall through and start anyway.
     _diaglog("run: starting")
+    # Dodge a fatal GTK-Wayland GSettings crash in the desktop client (see the
+    # helper) before it's spawned, or a menu launch hangs on an invisible window.
+    _prefer_xwayland_backend()
     global _instance_lock
     # Screenshot runs launch repeatedly in sequence, so they skip the single-
     # instance guard entirely (no lock to contend, nothing to raise/quit).

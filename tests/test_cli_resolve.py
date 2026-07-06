@@ -61,6 +61,18 @@ class TestListBluetoothLinux:
         # The precise form succeeded -- the bare fallback must not be reached.
         assert fake.calls == [list(_PAIRED)]
 
+    def test_strips_ansi_colour_from_bluetoothctl(self, monkeypatch):
+        # Modern bluetoothctl (recent BlueZ) colourises its listing even when
+        # stdout is a pipe, wrapping each line in ANSI escapes. The parser must
+        # strip them, else every device is dropped and the picker looks empty.
+        out = ("\x1b[1;30mDevice 00:11:22:33:44:55 The Fives\x1b[0m\n"
+               "\x1b[0;37mDevice AA:BB:CC:DD:EE:FF Living Room\x1b[0m\n")
+        _patch_run(monkeypatch, _FakeRun({_PAIRED: (out, 0)}))
+        assert [(d.address, d.name) for d in cli.list_bluetooth_linux()] == [
+            ("00:11:22:33:44:55", "The Fives"),
+            ("AA:BB:CC:DD:EE:FF", "Living Room"),
+        ]
+
     def test_lowercase_mac_is_uppercased(self, monkeypatch):
         _patch_run(monkeypatch, _FakeRun({_PAIRED: ("Device 00:11:22:33:44:55 x\n", 0)}))
         assert cli.list_bluetooth_linux()[0].address == "00:11:22:33:44:55"

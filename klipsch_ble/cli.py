@@ -205,6 +205,10 @@ def save_address(address):
 # the unfiltered enumerators used by the GUI list renamed devices regardless).
 _KLIPSCH_NAME = re.compile(r"klipsch|the fives|the sevens|the nines", re.I)
 
+# ANSI CSI sequences (colour/style) that modern bluetoothctl emits into its piped
+# output; stripped before parsing the `devices` listing.
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
+
 
 def _mac_from_dev_id(instance_id):
     m = re.search(r"DEV_([0-9A-Fa-f]{12})", instance_id)
@@ -269,7 +273,13 @@ def list_bluetooth_linux():
             continue
         found: list[Paired] = []
         for line in proc.stdout.splitlines():
-            m = re.match(r"Device\s+([0-9A-Fa-f:]{17})\s+(.*)", line.strip())
+            # Modern bluetoothctl (recent BlueZ) colourises its listing even when
+            # stdout is a pipe, so lines arrive wrapped in ANSI escapes, e.g.
+            # "\x1b[1;30mDevice 00:11:22:33:44:55 deep-bass\x1b[0m". Strip them
+            # first, otherwise the line doesn't start with "Device" (nor end with
+            # a clean name) and every device is silently dropped.
+            clean = _ANSI_ESCAPE.sub("", line).strip()
+            m = re.match(r"Device\s+([0-9A-Fa-f:]{17})\s+(.*)", clean)
             if m:
                 found.append(Paired(address=m.group(1).upper(),
                                     name=m.group(2).strip()))
