@@ -268,10 +268,11 @@
       if (!navigator.bluetooth) {
         throw new Error("Web Bluetooth is not available in this browser. Use Chrome, Edge or Opera.");
       }
-      // The speaker may not advertise BLE while audio-connected, so accept all
-      // devices and let the user pick; we still declare every service we touch.
+      // Match the advertised local name so unnamed devices don't flood the chooser.
+      // ponytail: default "Klipsch The Fives/Sevens/Nines" names only; a renamed speaker needs its prefix added here.
+      // The speaker may not advertise BLE while audio-connected — disconnect it in OS settings first.
       const device = await navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
+        filters: [{ namePrefix: "Klipsch" }],
         optionalServices: ALL_SERVICES,
       });
       return new KlipschClient(device, { allowPowerOff });
